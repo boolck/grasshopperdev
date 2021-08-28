@@ -23,8 +23,6 @@ public class SparkBatchCSVListener extends AbstractSparkListener {
 
     @Override
     public void process(OrderBookEngine orderBookEngine) throws OrderProcessingException, BBOException, InputReadException {
-        SparkSession session = SparkSession.builder().config(sparkConf).getOrCreate();
-
         this.orderBookRdd = getOrderBookRDD();
 
         super.processRDD(sparkConf, orderBookRdd, orderBookEngine);
@@ -38,12 +36,7 @@ public class SparkBatchCSVListener extends AbstractSparkListener {
         this.orderBookRdd = session.read()
                 .textFile(file)
                 .javaRDD()
-                .map(new Function<String, OrderBook>() {
-                    @Override
-                    public OrderBook call(String line) {
-                        return OrderBook.parseOrderBookRow(line);
-                    }
-                });
+                .map((Function<String, OrderBook>) OrderBook::parseOrderBookRow);
 
         return this.orderBookRdd;
     }

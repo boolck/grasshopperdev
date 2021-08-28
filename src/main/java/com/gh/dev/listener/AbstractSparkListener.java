@@ -1,7 +1,7 @@
 package com.gh.dev.listener;
 
 import com.gh.dev.calc.OrderBookEngine;
-import com.gh.dev.event.BBO;
+import com.gh.dev.model.BBO;
 import com.gh.dev.event.L3Request;
 import com.gh.dev.excp.BBOException;
 import com.gh.dev.excp.InputReadException;
@@ -16,7 +16,6 @@ import org.apache.spark.sql.streaming.OutputMode;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -27,9 +26,9 @@ public abstract class AbstractSparkListener implements SourceListener{
         List<L3Request> requestList = new LinkedList<>();
         //TODO parse row in orderbook_rdd to create L3Request);
         orderBookEngine.processRequest(requestList.stream());
-        BBO bbo = orderBookEngine.getBbo();
+        List<BBO> bbo = orderBookEngine.getBBOList();
         SparkSession session = SparkSession.builder().config(sparkConf).getOrCreate();
-        Dataset<BBO> dataset = session.createDataset(Collections.singletonList(bbo), Encoders.javaSerialization(BBO.class));
+        Dataset<BBO> dataset = session.createDataset(bbo, Encoders.javaSerialization(BBO.class));
         try {
             StreamingQuery console = dataset.writeStream().outputMode(OutputMode.Complete()).format("console").start();
             console.awaitTermination();

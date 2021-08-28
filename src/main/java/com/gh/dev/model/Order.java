@@ -1,16 +1,19 @@
 package com.gh.dev.model;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Objects;
 
+//input Order with builder
 public class Order {
-    //TODO replace long with BigInteger
-    private final long seqNum;
+    private final String seqNum;
     private final String orderId;
     private final Side side;
     //TODO replace double with BigDecimal
     private double price;
     private long qty;
-    private final long timestamp; // time in UTC msec since epoch
+    private final String timestamp;
+    private final BigInteger seqNumAsInt;
 
     private Order(OrderBuilder builder) {
         this.seqNum = builder.seqNum;
@@ -19,6 +22,7 @@ public class Order {
         this.price = builder.price;
         this.qty = builder.qty;
         this.timestamp = builder.timestamp;
+        seqNumAsInt = new BigDecimal(seqNum).toBigIntegerExact();
     }
 
     public double getPrice() {
@@ -37,13 +41,21 @@ public class Order {
         this.qty = qty;
     }
 
-    public long getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public long getSeqNum() {
+    public String getSeqNum() {
         return seqNum;
     }
+
+    public BigInteger getSeqNumAsInt(){
+        return seqNumAsInt;
+    }
+
+    public String getOrderId(){return this.orderId; }
+
+    public Side getSide(){return this.side; }
 
 
     @Override
@@ -57,7 +69,7 @@ public class Order {
         if (o == null || getClass() != o.getClass()) return false;
         Order order = (Order) o;
         return orderId.equals(order.orderId) &&
-                side == order.side;
+                side == order.side ;
     }
 
     @Override
@@ -77,15 +89,24 @@ public class Order {
 
     }
 
+    public int compareSeqNum(Order orderInProcess) {
+        return this.getSeqNumAsInt().subtract(orderInProcess.getSeqNumAsInt()).intValue();
+    }
+
+    public int compareSeqNum(String otherSeqNum) {
+        BigInteger otherSeqNumAsInt = new BigDecimal(otherSeqNum).toBigIntegerExact();
+        return this.getSeqNumAsInt().subtract(otherSeqNumAsInt).intValue();
+    }
+
     public static class OrderBuilder {
-        private long seqNum;
+        private String seqNum;
         private String orderId;
         private Side side;
         private double price;
         private long qty;
-        private long timestamp;
+        private String timestamp;
 
-        public OrderBuilder seqNum(long seqNum) {
+        public OrderBuilder seqNum(String seqNum) {
             this.seqNum = seqNum;
             return this;
         }
@@ -110,7 +131,7 @@ public class Order {
             return this;
         }
 
-        public OrderBuilder timestamp(long timestamp) {
+        public OrderBuilder timestamp(String timestamp) {
             this.timestamp = timestamp;
             return this;
         }

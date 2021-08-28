@@ -8,5 +8,5 @@ import com.gh.dev.excp.OrderProcessingException;
 
 public interface SourceListener {
 
-    public void process(OrderBookEngine orderBookEngine) throws OrderProcessingException, BBOException, InputReadException;
+    void process(OrderBookEngine orderBookEngine) throws OrderProcessingException, BBOException, InputReadException;
 }
