@@ -32,13 +32,17 @@ Verify that repository is checked out & then run
 - A main class ApplicaitonRunner is created to take in input of L43 request file. 
 - If no file is provided, default input l3_data_v3.csv is used.
 
-To call the main class:
+To call the main ApplicationRunner class:
 
 ```mvn clean compile exec:java```
 
-or explicitly call the main class
+or explicitly call it by passing argument
 
 ```mvn clean compile exec:java -Dexec.mainClass="com.gh.dev.ApplicationRunner"```
+
+The test setup that uses provided L3 & 11 csv can be run by 
+
+```mvn clean test```
 
 # Design
 [(Back to top)](#table-of-contents)
