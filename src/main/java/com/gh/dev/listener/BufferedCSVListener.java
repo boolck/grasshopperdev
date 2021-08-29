@@ -107,7 +107,6 @@ public class BufferedCSVListener implements SourceListener{
         orderBookEngine.processRequest(lastButOneRequest.stream());
 
         L3Request lastRequest= OrderBookRequestFileUtil.parseOrderBookRow(lines.get(lines.size()-1)).getL3Request();
-        //orderBookEngine.processThisRequestDirectlyThenProcessOutOfOrder(lastRequest);
         orderBookEngine.checkSequenceAndProcessBuffer(lastRequest);
     }
 
