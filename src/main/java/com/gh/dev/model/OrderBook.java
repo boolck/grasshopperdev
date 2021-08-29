@@ -6,7 +6,7 @@ import com.opencsv.bean.CsvBindByPosition;
 import java.io.Serializable;
 import java.util.Objects;
 
-//input L3OrderBook
+//input L3OrderBook, representing a row in L3orderbook csv
 public class OrderBook implements Serializable {
     @CsvBindByPosition(position = 0)
     private String seqNum;
@@ -111,36 +111,6 @@ public class OrderBook implements Serializable {
 
     public void setTime(String time) {
         this.time = time;
-    }
-
-    public static OrderBook parseOrderBookRow(String line) {
-        String[] parts = line.split(",");
-        OrderBook orderBook = new OrderBook();
-        orderBook.setSeqNum(parts[0]);
-        if(!parts[1].isEmpty()){
-            orderBook.setAddOrderId(parts[1]);
-            orderBook.setAddSide(parts[2]);
-            orderBook.setAddPrice(Double.parseDouble(parts[3]));
-            orderBook.setAddQty(Long.parseLong(parts[4]));
-        }
-        else if(!parts[5].isEmpty()){
-            orderBook.setUpdateOrderId(parts[5]);
-            orderBook.setUpdateSide(parts[6]);
-            orderBook.setUpdatePrice(Double.parseDouble(parts[7]));
-            orderBook.setUpdateQty(Long.parseLong(parts[8]));
-        }
-        else if(!parts[9].isEmpty()){
-            orderBook.setDeleteOrderId(parts[9]);
-            orderBook.setDeleteSide(parts[10]);
-        }
-        else if(!parts[11].isEmpty()){
-            orderBook.setTradeOrderId(parts[11]);
-            orderBook.setTradeSide(parts[12]);
-            orderBook.setTradePrice(Double.parseDouble(parts[13]));
-            orderBook.setTradeQty(Long.parseLong(parts[14]));
-        }
-        orderBook.setTime(parts[15]);
-        return orderBook;
     }
 
     public  L3Request getL3Request() {

@@ -1,5 +1,6 @@
 package com.gh.dev.excp;
 
+//exception to capture any order processing issues from order book engine
 public class OrderProcessingException extends Exception {
 
     public OrderProcessingException(String msg){

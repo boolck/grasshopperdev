@@ -2,6 +2,7 @@ package com.gh.dev.event;
 
 import com.gh.dev.model.Order;
 
+//input TRADE l3 request with original order and  qty to be reduced
 public class TradeOrderRequest implements L3Request {
 
     private final Order order;

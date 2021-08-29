@@ -1,12 +1,11 @@
 package com.gh.dev.model;
 
-import com.gh.dev.event.L1Response;
 import com.opencsv.bean.CsvBindByPosition;
 
 import java.io.Serializable;
 import java.util.Objects;
 
-//output L1 BBO
+//output L1 BBO, representing a row in expected_l1_data csv
 public class BBO implements L1Response, Serializable {
 
     @CsvBindByPosition(position = 0)

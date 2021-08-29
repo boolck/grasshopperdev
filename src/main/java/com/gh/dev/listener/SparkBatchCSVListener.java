@@ -1,15 +1,20 @@
 package com.gh.dev.listener;
 
 import com.gh.dev.calc.OrderBookEngine;
-import com.gh.dev.excp.BBOException;
 import com.gh.dev.excp.InputReadException;
 import com.gh.dev.excp.OrderProcessingException;
 import com.gh.dev.model.OrderBook;
+import com.gh.dev.util.OrderBookRequestFileUtil;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.sql.SparkSession;
 
+/*
+    1. takes input L3 request csv file and parses to  OrderBook RDD (immutable resilient distributed dataset)
+    2. orderbook RDD is passed to abstract spark listener for further processing
+    3. works in batch mode as full csv is parsed
+ */
 public class SparkBatchCSVListener extends AbstractSparkListener {
     private final SparkConf sparkConf;
     private final String file;
@@ -22,7 +27,7 @@ public class SparkBatchCSVListener extends AbstractSparkListener {
     }
 
     @Override
-    public void process(OrderBookEngine orderBookEngine) throws OrderProcessingException, BBOException, InputReadException {
+    public void process(OrderBookEngine orderBookEngine) throws OrderProcessingException, InputReadException {
         this.orderBookRdd = getOrderBookRDD();
 
         super.processRDD(sparkConf, orderBookRdd, orderBookEngine);
@@ -36,7 +41,7 @@ public class SparkBatchCSVListener extends AbstractSparkListener {
         this.orderBookRdd = session.read()
                 .textFile(file)
                 .javaRDD()
-                .map((Function<String, OrderBook>) OrderBook::parseOrderBookRow);
+                .map((Function<String, OrderBook>) OrderBookRequestFileUtil::parseOrderBookRow);
 
         return this.orderBookRdd;
     }

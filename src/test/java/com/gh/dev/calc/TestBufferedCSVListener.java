@@ -1,10 +1,11 @@
 package com.gh.dev.calc;
 
-import com.gh.dev.excp.BBOException;
 import com.gh.dev.excp.InputReadException;
 import com.gh.dev.excp.OrderProcessingException;
 import com.gh.dev.listener.BufferedCSVListener;
+import com.gh.dev.listener.SourceListener;
 import com.gh.dev.model.BBO;
+import com.gh.dev.util.OrderBookRequestFileUtil;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import org.junit.Test;
@@ -23,11 +24,64 @@ import static org.junit.Assert.fail;
 
 public class TestBufferedCSVListener {
 
+    private final String l1ExpectedOutputFile = "expected_l1_data_v3.csv";
 
     @Test
-    public void testL3RequestProcessor() throws OrderProcessingException, BBOException, InputReadException, IOException {
+    public void testL3RequestProcessorSingleBatchInBulk() throws OrderProcessingException, InputReadException, IOException {
         Path filePath = Paths.get("src","test","resources");
-        BufferedReader l1Reader = new BufferedReader(new FileReader(filePath.resolve("expected_l1_data_v3.csv").toFile()));
+        String inputFile = "l3_data_v3.csv";
+        SourceListener listener = new BufferedCSVListener(
+                filePath.resolve(inputFile).toFile().getAbsolutePath(),
+                40000,
+                26596);
+        OrderBookEngine engine = getOrderBookEngine(filePath, inputFile);
+        listener.process(engine);
+        compareWithExpectedOutput(filePath, engine.getBBOList());
+    }
+
+    //change batchsize to 1 to consider each request as new stream
+    @Test
+    public void testL3RequestProcessAsStream() throws OrderProcessingException, InputReadException, IOException {
+        Path filePath = Paths.get("src","test","resources");
+        String inputFile = "l3_data_v3.csv";
+        SourceListener listener = new BufferedCSVListener(
+                filePath.resolve(inputFile).toFile().getAbsolutePath(),
+                1,
+                26596);
+        OrderBookEngine engine = getOrderBookEngine(filePath, inputFile);
+        listener.process(engine);
+        compareWithExpectedOutput(filePath,engine.getBBOList());
+    }
+
+    /*
+    tests unified L3 processing by splitting the incoming workload into batch and stream
+    batch workload file is created as an example by taking top 10000 l3 requests
+    remaining requests from 100001 till end makes the stream request file and is processed sequentially with batchsize=1
+     */
+    @Test
+    public void testUnifiedL3ProcessRequest() throws OrderProcessingException, InputReadException, IOException {
+        Path filePath = Paths.get("src","test","resources");
+        String batchFile = "l3_data_v3_batch.csv";
+        SourceListener batchListener = new BufferedCSVListener(
+                filePath.resolve(batchFile).toFile().getAbsolutePath(),
+                10000,
+                Integer.MAX_VALUE);
+        OrderBookEngine engine = getOrderBookEngine(filePath, batchFile);
+        batchListener.process(engine);
+
+        String streamFileSource = "l3_data_v3_stream.csv";
+        SourceListener streamListener = new BufferedCSVListener(
+                filePath.resolve(streamFileSource).toFile().getAbsolutePath(),
+                1,
+                16596);
+        streamListener.process(engine);
+
+        compareWithExpectedOutput(filePath,engine.getBBOList());
+    }
+
+    private void compareWithExpectedOutput(Path filePath, List<BBO> actualBBO) throws IOException, OrderProcessingException, InputReadException {
+
+        BufferedReader l1Reader = new BufferedReader(new FileReader(filePath.resolve(l1ExpectedOutputFile).toFile()));
         l1Reader.readLine();
         CsvToBean<BBO> csvReader = new CsvToBeanBuilder<BBO>(l1Reader)
                 .withType(BBO.class)
@@ -37,23 +91,24 @@ public class TestBufferedCSVListener {
                 .build();
         List<BBO> expectedBBO = csvReader.parse();
 
-
-        BufferedCSVListener listener = new BufferedCSVListener(filePath.resolve("l3_data_v3.csv").toFile().getAbsolutePath(),40000,16900);
-        OrderBookEngine engine = new OrderBookEngine();
-        listener.process(engine);
-        List<BBO> actualBBO = engine.getBBOList();
         Map<BBO,BBO> mismatched = new HashMap<>();
         int min = Math.min(expectedBBO.size(),actualBBO.size());
         IntStream.range(0, min).forEach(i -> {
-            BBO bbo = actualBBO.get(i);
-            BBO o = expectedBBO.get(i);
-            if (!bbo.equals(o)) {
-                mismatched.put(bbo,o);
+            if (!actualBBO.get(i).equals(expectedBBO.get(i))) {
+                mismatched.put(actualBBO.get(i),expectedBBO.get(i));
             }
         });
         if(!mismatched.isEmpty()){
-            mismatched.forEach((key, value) -> System.out.printf("actual%s vs expected%s%n", key, value));
-            fail("Found "+mismatched.size()+" mismatches in expected vs actual BBO, please check ");
+            fail("Found "+mismatched.size()+" mismatches in expected vs actual BBO "+mismatched);
         }
+    }
+
+    private OrderBookEngine getOrderBookEngine(Path filePath, String l3RequestFile) throws InputReadException, OrderProcessingException {
+        OrderBookRequestFileUtil.OrderBookAnalytics orderBookAnalytics =
+                OrderBookRequestFileUtil.parseRequestFile(filePath.resolve(l3RequestFile).toFile().getAbsolutePath());
+        int maxSeqWindow = orderBookAnalytics.getMaxSequenceNumberGap();
+        String earliestSeqNum = orderBookAnalytics.getEarliestSeqNum();
+        OrderBookEngine engine = new OrderBookEngine(earliestSeqNum,maxSeqWindow);
+        return engine;
     }
 }

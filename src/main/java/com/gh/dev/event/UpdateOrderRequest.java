@@ -2,6 +2,7 @@ package com.gh.dev.event;
 
 import com.gh.dev.model.Order;
 
+//input UPDATE l3 request with original order and new price & qty to be updated
 public class UpdateOrderRequest implements L3Request {
     private final Order order;
     public double newPrice;

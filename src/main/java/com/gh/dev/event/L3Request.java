@@ -3,7 +3,7 @@ package com.gh.dev.event;
 
 import com.gh.dev.model.Order;
 
-
+// l3 request interfae to support all ops with  default ordering via seq number
 public interface L3Request extends Comparable<L3Request> {
 
     enum RequestType{

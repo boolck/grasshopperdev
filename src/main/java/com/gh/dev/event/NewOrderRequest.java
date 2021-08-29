@@ -2,6 +2,7 @@ package com.gh.dev.event;
 
 import com.gh.dev.model.Order;
 
+//input NEW l3 request with  order to be inserted
 public class NewOrderRequest implements L3Request {
 
     private final Order order;

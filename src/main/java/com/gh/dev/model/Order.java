@@ -1,10 +1,12 @@
 package com.gh.dev.model;
 
+import com.gh.dev.util.OrderBookRequestFileUtil;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Objects;
 
-//input Order with builder
+//input Order which is main processing component of every L3Request
 public class Order {
     private final String seqNum;
     private final String orderId;
@@ -90,12 +92,11 @@ public class Order {
     }
 
     public int compareSeqNum(Order orderInProcess) {
-        return this.getSeqNumAsInt().subtract(orderInProcess.getSeqNumAsInt()).intValue();
+        return this.compareSeqNum(orderInProcess.getSeqNum());
     }
 
     public int compareSeqNum(String otherSeqNum) {
-        BigInteger otherSeqNumAsInt = new BigDecimal(otherSeqNum).toBigIntegerExact();
-        return this.getSeqNumAsInt().subtract(otherSeqNumAsInt).intValue();
+        return OrderBookRequestFileUtil.compareSeqNum(this.seqNum,otherSeqNum);
     }
 
     public static class OrderBuilder {

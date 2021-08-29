@@ -1,7 +1,6 @@
 package com.gh.dev.calc;
 
 import com.gh.dev.event.*;
-import com.gh.dev.excp.BBOException;
 import com.gh.dev.excp.OrderProcessingException;
 import com.gh.dev.model.BBO;
 import com.gh.dev.model.Order;
@@ -10,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.gh.dev.event.TradeOrderRequest;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -22,13 +20,8 @@ public class TestOrderBookEngine {
 
     OrderBookEngine engine = new OrderBookEngine("0",2);
 
-    @Before
-    public void beforeEach(){
-        engine = new OrderBookEngine();
-    }
-
     @Test
-    public void testEmptyBBO() throws OrderProcessingException, BBOException{
+    public void testEmptyBBO() throws OrderProcessingException{
         Order.OrderBuilder orderBuilder = new Order.OrderBuilder();
         Order buy1 = orderBuilder.seqNum("1").id("b1").side(Side.BUY).price(10).qty(100).timestamp("1000").build();
         engine.processRequest(Stream.of(new NewOrderRequest(buy1)));
@@ -37,7 +30,7 @@ public class TestOrderBookEngine {
     }
 
     @Test
-    public void testNewOrder() throws OrderProcessingException, BBOException {
+    public void testNewOrder() throws OrderProcessingException {
         Order.OrderBuilder orderBuilder = new Order.OrderBuilder();
         Order buy1 = orderBuilder.seqNum("1").id("b1").side(Side.BUY).price(10).qty(100).timestamp("1000").build();
         Order buy2 = orderBuilder.seqNum("2").id("b2").side(Side.BUY).price(9).qty(100).timestamp("2000").build();
@@ -51,7 +44,7 @@ public class TestOrderBookEngine {
     }
 
     @Test
-    public void testCancelOrder() throws OrderProcessingException, BBOException {
+    public void testCancelOrder() throws OrderProcessingException {
         Order.OrderBuilder orderBuilder = new Order.OrderBuilder();
         Order buy1 = orderBuilder.seqNum("1").id("b1").side(Side.BUY).price(10).qty(150).timestamp("1000").build();
         Order buy2 = orderBuilder.seqNum("2").id("b2").side(Side.BUY).price(9).qty(100).timestamp("2000").build();
@@ -66,7 +59,7 @@ public class TestOrderBookEngine {
     }
 
     @Test
-    public void testUpdateOrder() throws OrderProcessingException, BBOException {
+    public void testUpdateOrder() throws OrderProcessingException {
         Order.OrderBuilder orderBuilder = new Order.OrderBuilder();
         Order buy1 = orderBuilder.seqNum("1").id("b1").side(Side.BUY).price(10).qty(100).timestamp("1000").build();
         Order buy2 = orderBuilder.seqNum("2").id("b2").side(Side.BUY).price(9).qty(100).timestamp("2000").build();
@@ -80,7 +73,7 @@ public class TestOrderBookEngine {
     }
 
     @Test
-    public void testTradeOrderWithQtyInConsideration() throws OrderProcessingException, BBOException {
+    public void testTradeOrderWithQtyInConsideration() throws OrderProcessingException{
         Order.OrderBuilder orderBuilder = new Order.OrderBuilder();
         Order buy1 = orderBuilder.seqNum("1").id("b1").side(Side.BUY).price(10).qty(100).timestamp("1000").build();
         Order buy2 = orderBuilder.seqNum("2").id("b2").side(Side.BUY).price(9).qty(100).timestamp("2000").build();
@@ -93,7 +86,7 @@ public class TestOrderBookEngine {
     }
 
     @Test
-    public void testTradeOrderWithQtyExceeding() throws OrderProcessingException, BBOException {
+    public void testTradeOrderWithQtyExceeding() throws OrderProcessingException {
         Order.OrderBuilder orderBuilder = new Order.OrderBuilder();
         Order buy1 = orderBuilder.seqNum("1").id("b1").side(Side.BUY).price(10).qty(100).timestamp("1000").build();
         Order buy2 = orderBuilder.seqNum("2").id("b2").side(Side.BUY).price(9).qty(100).timestamp("2000").build();
@@ -106,7 +99,7 @@ public class TestOrderBookEngine {
     }
 
     @Test
-    public void testCancelOutOfOrder() throws OrderProcessingException, BBOException {
+    public void testCancelOutOfOrder() throws OrderProcessingException {
         Order.OrderBuilder orderBuilder = new Order.OrderBuilder();
         Order buy1_1 = orderBuilder.seqNum("1").id("b1").side(Side.BUY).price(10).qty(100).timestamp("1000").build();
         Order sell1 = orderBuilder.seqNum("2").id("s1").side(Side.SELL).price(12).qty(100).timestamp("2000").build();
@@ -115,9 +108,23 @@ public class TestOrderBookEngine {
         engine.processRequest(newOrderRequests.stream());
         BBO expectedBBO = new BBO("2",10,100,12,100,"2000");
         assertEquals(expectedBBO,engine.getLatestBBO());
-        Order cancelbuy1 = new Order.OrderBuilder().id(buy1_1.getOrderId()).seqNum("3").side(Side.BUY).timestamp("3000").build();
+        Order cancelbuy1 = orderBuilder.id(buy1_1.getOrderId()).seqNum("3").side(Side.BUY).timestamp("3000").build();
         engine.processRequest(Stream.of(new CancelOrderRequest(cancelbuy1)));
         expectedBBO = new BBO("4",11,100,12,100,"4000");
+        assertEquals(expectedBBO,engine.getLatestBBO());
+    }
+
+    @Test
+    public void testNewOrderOutOfSequence() throws OrderProcessingException {
+        Order.OrderBuilder orderBuilder = new Order.OrderBuilder();
+        Order buy1_1 = orderBuilder.seqNum("1").id("b1").side(Side.BUY).price(10).qty(100).timestamp("1000").build();
+        Order sell1 = orderBuilder.seqNum("2").id("s1").side(Side.SELL).price(12).qty(100).timestamp("2000").build();
+        List<L3Request> newOrderRequests = Arrays.asList(new NewOrderRequest(buy1_1), new NewOrderRequest(sell1));
+        engine.processRequest(newOrderRequests.stream());
+        BBO expectedBBO = new BBO("2",10,100,12,100,"2000");
+        assertEquals(expectedBBO,engine.getLatestBBO());
+        Order buy4 = orderBuilder.seqNum("4").id("b4").side(Side.BUY).price(11).qty(100).timestamp("4000").build();
+        engine.checkSequenceAndProcessBuffer(new NewOrderRequest(buy4));
         assertEquals(expectedBBO,engine.getLatestBBO());
     }
 

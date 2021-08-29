@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 
 import static java.util.AbstractMap.*;
 
+//main calculator class for order request processing and BBO creation
 public class OrderBookEngine {
 
     //bid(buy) & offer(ask) priority queues, sorted by price accordingly
@@ -39,15 +40,10 @@ public class OrderBookEngine {
     private String lastSeqNum ;
 
     /*
-    default constructor
     initial sequence is defaulted to first-1 seqnum from the raw l3 data provided
     maxSeqWindow is max gap between any consecutive orders inferred from raw l3 data provided
     these can be passed for for any custom implementation to overloaded constructor
     */
-    public OrderBookEngine(){
-        this("1627942268920653170",8);
-    }
-
     public OrderBookEngine(String initialSeqNum, int maxSeqWindow){
         this.lastSeqNum = initialSeqNum;
         this.maxSeqWindow = maxSeqWindow;
@@ -61,25 +57,38 @@ public class OrderBookEngine {
         Iterator<L3Request> iterator = requestStream.iterator();
         while (iterator.hasNext()) {
             L3Request request = iterator.next();
-            checkOrderAndProcessRequest(request);
-            //process out of sync orders based on sequence number
-            processBufferedMessages(buffer.size()> maxSeqWindow);
+            checkSequenceAndProcessBuffer(request);
         }
         //process out of order messages if cancel/update is without existing order\
         this.processOutOfOrderMessages();
     }
 
-    //process single request directly and tries to republish an buffer/out of sync messages
-    public void processSingleAtomicRequest(L3Request request) throws OrderProcessingException {
-        this.processRequestDirectly(request);
-        this.processOutOfOrderMessages();
+    public void checkSequenceAndProcessBuffer(L3Request request) throws OrderProcessingException {
+        checkSequenceAndProcessRequest(request);
+        //process out of sync orders based on sequence number. if buffers exceed maximum allowed, process directly
+
+        processOutOfOrderMessages();
+    }
+
+    //check if sequence number is not in sync else process
+    private void checkSequenceAndProcessRequest(L3Request request) throws OrderProcessingException {
+        if(isRequestOutOrOrder(request)){
+            buffer.add(request);
+            return ;
+        }
+        processThisAtomicRequest(request);
+    }
+
+    //compares the BigInteger equivalent for seqnum string and if there is gap of more than 1, considers out of order.
+    private boolean isRequestOutOrOrder(L3Request request) {
+        return request.getOrder().compareSeqNum(lastSeqNum) > 1;
     }
 
     //processes all buffered messages one by one. skips checking sequence if directpublish is enabled
     private void processBufferedMessages(boolean directPublish) throws  OrderProcessingException {
         if(directPublish){
             for(L3Request request1 : buffer){
-                this.processRequestDirectly(request1);
+                this.processThisAtomicRequest(request1);
             }
             buffer.clear();
         }
@@ -87,35 +96,26 @@ public class OrderBookEngine {
             Set<L3Request> clonedBuffer = new TreeSet<>(buffer);
             for (L3Request next : clonedBuffer) {
                 buffer.remove(next);
-                this.checkOrderAndProcessRequest(next);
+                this.checkSequenceAndProcessRequest(next);
             }
         }
     }
 
-    //check if sequence number is not in sync else process
-    private void checkOrderAndProcessRequest(L3Request request) throws OrderProcessingException {
-        if(isRequestOutOrOrder(request)){
-            buffer.add(request);
-            return ;
-        }
-        processRequestDirectly(request);
-    }
-
     //processes both buffered messages and out of sync cancel/update messages
-    private void processOutOfOrderMessages() throws OrderProcessingException {
-        processBufferedMessages(true);
+    public void processOutOfOrderMessages() throws OrderProcessingException {
+        processBufferedMessages(buffer.size()> maxSeqWindow);
         if(!outOfOrderRequests.isEmpty()){
             List<L3Request> clonedList  = new LinkedList<>(outOfOrderRequests);
             outOfOrderRequests.clear();
             for(L3Request request : clonedList){
-                this.checkOrderAndProcessRequest(request);
+                this.checkSequenceAndProcessRequest(request);
             }
         }
 
     }
 
     //processes single order  request & updates lastseqnum
-    private void processRequestDirectly(L3Request request) throws OrderProcessingException {
+    private void processThisAtomicRequest(L3Request request) throws OrderProcessingException {
         L3Request.RequestType requestType = request.getRequestType();
 
         switch (requestType) {
@@ -139,11 +139,6 @@ public class OrderBookEngine {
                 throw new OrderProcessingException("Invalid requestType received " + requestType);
         }
         lastSeqNum = request.getOrder().getSeqNum();
-    }
-
-    //compares the BigInteger equivalent for seqnum string and if there is gap of more than 1, considers out of order.
-    private boolean isRequestOutOrOrder(L3Request request) {
-        return request.getOrder().compareSeqNum(lastSeqNum) > 1;
     }
 
     //processes new order request
@@ -228,8 +223,6 @@ public class OrderBookEngine {
             outOfOrderRequests.add(request);
         }
     }
-
-
 
     //updates BBO is eligible update to ask or offer is available
     private void updateBBO(Order orderInProcess)  {
