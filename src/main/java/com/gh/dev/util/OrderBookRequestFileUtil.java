@@ -16,10 +16,10 @@ import java.util.stream.Collectors;
 public  class OrderBookRequestFileUtil {
 
     public static class OrderBookAnalytics{
-        private String fileName;
-        private int maxSequenceNumberGap;
-        private String earliestSeqNum;
-        private List<OrderBook> orderBookList;
+        private final String fileName;
+        private final int maxSequenceNumberGap;
+        private final String earliestSeqNum;
+        private final List<OrderBook> orderBookList;
 
         public OrderBookAnalytics(String fileName,int maxSequenceNumberGap, String earliestSeqNum,List<OrderBook> orderBookList){
             this.fileName = fileName;
@@ -78,8 +78,7 @@ public  class OrderBookRequestFileUtil {
                         OrderBookRequestFileUtil.compareSeqNum(nextSeqNum, thisSeqNum));
             }
 
-            OrderBookAnalytics result = new OrderBookAnalytics(l3RequestFile,maxSequenceNumberGap,earliestSeqNum,allL3requests);
-            return result;
+            return new OrderBookAnalytics(l3RequestFile,maxSequenceNumberGap,earliestSeqNum,allL3requests);
 
         } catch (IOException e) {
             throw new InputReadException("Error loading file "+l3RequestFile,e);

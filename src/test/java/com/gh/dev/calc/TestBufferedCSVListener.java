@@ -24,8 +24,6 @@ import static org.junit.Assert.fail;
 
 public class TestBufferedCSVListener {
 
-    private final String l1ExpectedOutputFile = "expected_l1_data_v3.csv";
-
     @Test
     public void testL3RequestProcessorSingleBatchInBulk() throws OrderProcessingException, InputReadException, IOException {
         Path filePath = Paths.get("src","test","resources");
@@ -79,8 +77,9 @@ public class TestBufferedCSVListener {
         compareWithExpectedOutput(filePath,engine.getBBOList());
     }
 
-    private void compareWithExpectedOutput(Path filePath, List<BBO> actualBBO) throws IOException, OrderProcessingException, InputReadException {
+    private void compareWithExpectedOutput(Path filePath, List<BBO> actualBBO) throws IOException {
 
+        String l1ExpectedOutputFile = "expected_l1_data_v3.csv";
         BufferedReader l1Reader = new BufferedReader(new FileReader(filePath.resolve(l1ExpectedOutputFile).toFile()));
         l1Reader.readLine();
         CsvToBean<BBO> csvReader = new CsvToBeanBuilder<BBO>(l1Reader)
@@ -103,12 +102,11 @@ public class TestBufferedCSVListener {
         }
     }
 
-    private OrderBookEngine getOrderBookEngine(Path filePath, String l3RequestFile) throws InputReadException, OrderProcessingException {
+    private OrderBookEngine getOrderBookEngine(Path filePath, String l3RequestFile) throws InputReadException {
         OrderBookRequestFileUtil.OrderBookAnalytics orderBookAnalytics =
                 OrderBookRequestFileUtil.parseRequestFile(filePath.resolve(l3RequestFile).toFile().getAbsolutePath());
         int maxSeqWindow = orderBookAnalytics.getMaxSequenceNumberGap();
         String earliestSeqNum = orderBookAnalytics.getEarliestSeqNum();
-        OrderBookEngine engine = new OrderBookEngine(earliestSeqNum,maxSeqWindow);
-        return engine;
+        return new OrderBookEngine(earliestSeqNum,maxSeqWindow);
     }
 }

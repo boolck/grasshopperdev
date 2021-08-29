@@ -8,12 +8,10 @@ import com.gh.dev.model.OrderBook;
 import com.gh.dev.util.OrderBookRequestFileUtil;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /*
     1. Loads L3 file  with prespecified batch size
@@ -25,8 +23,8 @@ import java.util.stream.Stream;
 public class BufferedCSVListener implements SourceListener{
     //name of csv file having L3 incoming data
     private final String file;
-    private int batchSize;
-    private int limit;
+    private final int batchSize;
+    private final int limit;
 
     //default constructor creates streaming processor by setting batchSize as unity
     public BufferedCSVListener(String inputRequestFile) {
@@ -37,17 +35,6 @@ public class BufferedCSVListener implements SourceListener{
         this.file = inputRequestFile;
         this.batchSize = batchSize;
         this.limit = limit;
-    }
-
-
-
-    public void processBatch(OrderBookEngine orderBookEngine) throws InputReadException, OrderProcessingException {
-        OrderBookRequestFileUtil.OrderBookAnalytics orderBookAnalytics =
-                OrderBookRequestFileUtil.parseRequestFile(Paths.get(file).toFile().getAbsolutePath());
-        List<OrderBook> parsedOrderBook = orderBookAnalytics.getOrderBookList();
-        List<OrderBook> processedSoFar = new LinkedList<>();
-
-
     }
 
     //parses the csv and calls orderbook engine to process the requests
