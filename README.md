@@ -1,7 +1,7 @@
 <!-- Add banner here -->
 
 # Project Title
-Project DoubleHelix -  Unified Batch & Streaming Order Data Matching Engine
+Grasshopper Asia Data Engineering Challenge -  Unified Batch & Streaming Order Data Matching Engine
 
 # Table of contents
 
