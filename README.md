@@ -1,17 +1,39 @@
 <!-- Add banner here -->
 
 # Project Title
-Grasshopper Asia Data Engineering Challenge -  Unified Batch & Streaming Order Data Matching Engine
+Project Double Helix - A Unified Batch & Streaming L3 to L1 market data state machine
 
 # Table of contents
 
 - [Project Title](#project-title)
 - [Table of contents](#table-of-contents)
+- [Description](#description)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Design](#design)
 - [Enhancement](#enhancement)
 - [Release History](#release-history)
+
+# Description
+The purpose of this task is to convert Level 3 market data to Level 1 market data. 
+
+Input:
+
+An order book of Level 3 (L3) data is provided that indicates the state of the market at a point in time. This shows for each price level and each side (buy/sell) the orders for that level.
+Because sending the full state of the order book for each modification to the book is slow and wastes bandwidth, the exchange publishes deltas/diffs instead, which describes updates to the state of the book.
+Each order has a side, price and quantity. They are uniquely identified by an order id. An order update can be one of:
+● ADD inserts a new order into the book.
+● UPDATE modifies an existing order on the book.
+● DELETE removes the order from the book.
+● TRADE matches buy orders with sell orders at a specific price; the corresponding update to the book being a reduction of quantity outstanding in the respective orders according to the amount traded
+
+Output:
+
+The task creates BBO -(best bid and offer) that constitutes the lowest sell price level (ask price) with all the cumulative quantity at ask price level (ask size) and the highest buy price level (bid price) with all the cumulative quantity at both levels.
+Level 1 (L1) data refers to the stream of updates to BBO as a consequence of updates to the book state. It is derived data, with the L3 data being the raw data. Unlike with L3 data the full state of the BBO should be published each time as it is not a voluminous amount of data.
+
+
+
 
 # Installation
 [(Back to top)](#table-of-contents)
@@ -20,7 +42,7 @@ To use this project, first clone the repo on your device using the command below
 
 ```git init```
 
-```git clone https://github.com/boolck/grasshopperdev.git``` 
+```git clone https://github.com/boolck/doublehelix.git``` 
 
 Verify that repository is checked out & then run
 
@@ -29,7 +51,7 @@ Verify that repository is checked out & then run
 # Usage
 [(Back to top)](#table-of-contents)
 
-- A main class ApplicaitonRunner is created to take in input of L43 request file. 
+- A main class ApplicationRunner is created to take in input of L43 request file. 
 - If no file is provided, default input l3_data_v3.csv is used.
 
 To call the main ApplicationRunner class:
@@ -74,7 +96,7 @@ Enhancements for future releases:
 # Release History
 [(Back to top)](#table-of-contents)
 
-Release ver   | Description
-------------- | -------------
-1.0-SNAPSHOT  | First release. Uses BufferedCSVListener for unified batch and streaming of L3 order requests in csv data interface
+| Release ver  | Description                                                                                                        |
+|--------------|--------------------------------------------------------------------------------------------------------------------|
+| 1.0-SNAPSHOT | First release. Uses BufferedCSVListener for unified batch and streaming of L3 order requests in csv data interface |
 
