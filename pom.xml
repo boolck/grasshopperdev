@@ -29,7 +29,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <mainClass>com.gh.dev.ApplicationRunner</mainClass>
+                    <mainClass>com.boolck.dev.ApplicationRunner</mainClass>
                     <arguments>
                         <argument>src/test/resources/l3_data_v3.csv</argument>
                     </arguments>
