@@ -22,10 +22,10 @@ Input:
 An order book of Level 3 (L3) data is provided that indicates the state of the market at a point in time. This shows for each price level and each side (buy/sell) the orders for that level.
 Because sending the full state of the order book for each modification to the book is slow and wastes bandwidth, the exchange publishes deltas/diffs instead, which describes updates to the state of the book.
 Each order has a side, price and quantity. They are uniquely identified by an order id. An order update can be one of:
-● ADD inserts a new order into the book.
-● UPDATE modifies an existing order on the book.
-● DELETE removes the order from the book.
-● TRADE matches buy orders with sell orders at a specific price; the corresponding update to the book being a reduction of quantity outstanding in the respective orders according to the amount traded
+ - ADD inserts a new order into the book.
+ - UPDATE modifies an existing order on the book.
+ - DELETE removes the order from the book.
+ - TRADE matches buy orders with sell orders at a specific price; the corresponding update to the book being a reduction of quantity outstanding in the respective orders according to the amount traded
 
 Output:
 
