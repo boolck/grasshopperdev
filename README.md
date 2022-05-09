@@ -51,7 +51,7 @@ Verify that repository is checked out & then run
 # Usage
 [(Back to top)](#table-of-contents)
 
-- A main class ApplicationRunner is created to take in input of L43 request file. 
+- A main class ApplicationRunner is created to take in input of L3 request file. 
 - If no file is provided, default input l3_data_v3.csv is used.
 
 To call the main ApplicationRunner class:
